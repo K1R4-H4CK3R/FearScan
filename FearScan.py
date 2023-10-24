@@ -18,12 +18,16 @@ exibir_banner()
 def verifica_porta(ip, porta):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(1)  # Definir um tempo limite de 1 segundo para a conexão
-    resultado = sock.connect_ex((ip, porta))
-    sock.close()
-    if resultado == 0:
-        print("\033[92m[A porta {} está aberta]\033[0m".format(porta))
-        return True
-    return False
+    try:
+        resultado = sock.connect_ex((ip, porta))
+        sock.close()
+        if resultado == 0:
+            print("\033[92m[A porta {} está aberta]\033[0m".format(porta))
+            return True
+        return False
+    except socket.gaierror as e:
+        print(f"Erro ao resolver o hostname: {e}")
+        return False
 
 # Função para encontrar a página de administração de um site e salvar em arquivo
 def encontra_pagina_admin(url):
