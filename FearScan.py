@@ -79,7 +79,6 @@ def encontra_user_senha_admin(url):
                         file.write(f"{key}: {value}\n")
     except requests.exceptions.RequestException:
         pass
-
 def extrair_e_salvar_informacoes(url):
     try:
         pagina = requests.get(url)
@@ -94,7 +93,10 @@ def extrair_e_salvar_informacoes(url):
         
         # Extrair todos os scripts da página
         scripts = [script['src'] for script in soup.find_all('script', src=True)]
-        
+
+        # Obter cabeçalhos da resposta HTTP
+        headers = pagina.headers
+
         # Criar um diretório para salvar as informações
         site_name = url.split('//')[1].split('/')[0]
         if not os.path.exists(site_name):
@@ -112,15 +114,36 @@ def extrair_e_salvar_informacoes(url):
             for script in scripts:
                 file.write(script + '\n')
 
+        with open(f"{site_name}/headers.txt", 'w', encoding='utf-8') as file:
+            for key, value in headers.items():
+                file.write(f"{key}: {value}\n")
+
         return {
             'texto': f"{site_name}/texto.txt",
             'imagens': f"{site_name}/imagens.txt",
-            'scripts': f"{site_name}/scripts.txt"
+            'scripts': f"{site_name}/scripts.txt",
+            'headers': f"{site_name}/headers.txt"
         }
     except requests.exceptions.RequestException as e:
         print("Erro ao acessar o site:", e)
         return {}
+def verificar_numero_de_usuarios(url):
+    try:
+        # Faça uma solicitação GET para o site e verifique os cabeçalhos da resposta
+        response = requests.get(url)
+        response.raise_for_status()
+        headers = response.headers
 
+        # Verifique o cabeçalho "Set-Cookie" para determinar o número de usuários
+        set_cookie_header = headers.get('Set-Cookie')
+        if set_cookie_header:
+            # Exemplo de análise do cabeçalho "Set-Cookie" para obter informações sobre os usuários
+            user_info = set_cookie_header.split(';')[0]
+            print(f"\033[93m[Número de usuários atuais no site:]\033[0m {user_info}")
+
+    except requests.exceptions.RequestException as e:
+        print("Erro ao acessar o site:", e)
+        
 exibir_banner()
 site = input("\033[95m[Digite o site (URL):]\033[0m")
 ip = obter_ip(site)
@@ -141,3 +164,5 @@ if ip:
         print("Informações extraídas e salvas nos seguintes arquivos:")
         for tipo, arquivo in informacoes_salvas.items():
             print(f"{tipo}: {arquivo}")
+# Chama a função para verificar o número de usuários
+verificar_numero_de_usuarios(url_alvo)
