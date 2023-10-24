@@ -12,24 +12,33 @@ def exibir_banner():
     print("#   Versão: 2.0                                   #")
     print("#                                                 #")
     print("\033[95m" + "#" * 50)
-exibir_banner()
 
-# Função para verificar se uma porta está aberta
+def obter_ip(site):
+    try:
+        ip = socket.gethostbyname(site)
+        return ip
+    except socket.gaierror:
+        print("\033[91m[Erro ao obter o IP do site. Verifique se o site está correto.]\033[0m")
+        return None
+
+def verificar_portas(ip, porta_inicio, porta_fim):
+    print("\n\033[93m[Verificando as portas no intervalo {} - {} para o site {}]\033[0m".format(porta_inicio, porta_fim, site))
+    for porta in range(porta_inicio, porta_fim + 1):
+        if verifica_porta(ip, porta):
+            print("\033[92m[Porta {} está aberta]\033[0m".format(porta))
+
 def verifica_porta(ip, porta):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(1)  # Definir um tempo limite de 1 segundo para a conexão
     resultado = sock.connect_ex((ip, porta))
     sock.close()
     if resultado == 0:
-        print("\033[92m[A porta {} está aberta]\033[0m".format(porta))
         return True
-    # Suprimir a mensagem de erro do socket
     elif resultado == 10035:  # Código de erro para timeout
         pass
     else:
-        pass  # Outros erros de porta
+        pass
 
-# Função para encontrar a página de administração de um site e salvar em arquivo
 def encontra_pagina_admin(url):
     try:
         pagina = requests.get(url)
@@ -48,7 +57,6 @@ def encontra_pagina_admin(url):
     except requests.exceptions.RequestException:
         pass
 
-# Função para encontrar o usuário e senha de administração do site e salvar em arquivo
 def encontra_user_senha_admin(url):
     try:
         pagina = requests.get(url)
@@ -72,7 +80,6 @@ def encontra_user_senha_admin(url):
     except requests.exceptions.RequestException:
         pass
 
-# Função para extrair informações do site e salvar em arquivos
 def extrair_e_salvar_informacoes(url):
     try:
         pagina = requests.get(url)
@@ -114,27 +121,22 @@ def extrair_e_salvar_informacoes(url):
         print("Erro ao acessar o site:", e)
         return {}
 
-# IP ou URL do alvo
-alvo = input("\033[95m[Digite o Ip ou Url:]\033[0m")
+exibir_banner()
+site = input("\033[95m[Digite o site (URL):]\033[0m")
+ip = obter_ip(site)
 
-# Especificar o intervalo de portas a serem verificadas
-porta_inicio = int(input("Digite a porta de início: "))
-porta_fim = int(input("Digite a porta de fim: "))
+if ip:
+    print("\033[93m[IP do site:]\033[0m", ip)
+    porta_inicio = int(input("Digite a porta de início: "))
+    porta_fim = int(input("Digite a porta de fim: "))
+    
+    verificar_portas(ip, porta_inicio, porta_fim)
 
-# Verifica as portas no intervalo especificado
-for porta in range(porta_inicio, porta_fim + 1):
-    verifica_porta(alvo, porta)  # Verifica a porta
-
-    # URL completa do alvo
-    url_alvo = f'http://{alvo}:{porta}'
-    # Encontra a página de administração do alvo
+    url_alvo = f'http://{site}'
     encontra_pagina_admin(url_alvo)
-    # Encontra o usuário e senha de administração do alvo
     encontra_user_senha_admin(url_alvo)
-    # Extrair e salvar informações do site
     informacoes_salvas = extrair_e_salvar_informacoes(url_alvo)
 
-    # Exibir os arquivos onde as informações foram salvas
     if informacoes_salvas:
         print("Informações extraídas e salvas nos seguintes arquivos:")
         for tipo, arquivo in informacoes_salvas.items():
